@@ -658,7 +658,7 @@ export const enUS = {
     testSucceeded: "Upload, read, and delete checks passed.",
     saved: "Object storage settings saved.",
     failed: "The object storage operation failed.",
-    encryptionKeyMissing: "Configure an EDGE_EVER_STORAGE_ENCRYPTION_KEY Worker Secret of at least 32 characters before saving third-party credentials.",
+    authenticationRequired: "Enable instance authentication before saving third-party storage credentials.",
     switchHint: "Switching only affects new uploads. Existing attachments remain in their original store and are not migrated automatically.",
     demoDisabled: "Object storage cannot be changed on the demo instance.",
   },
@@ -716,6 +716,7 @@ export const enUS = {
     saved: "Model service saved.",
     failed: "The AI model operation failed.",
     encryptionKeyMissing: "Encrypted AI credentials require instance authentication. Configure authentication first; an independent credential key is optional for advanced deployments.",
+    privacyNotice: "Please use trusted model providers or API proxies to protect your personal privacy.",
   },
   aiPrompts: {
     title: "Prompt library",
@@ -918,7 +919,7 @@ export const enUS = {
       custom: "Custom image",
       unknown: "Unknown",
     },
-    deployment: "Deployment",
+    deployment: "Deployment source",
     deploymentTriggers: {
       github_release: "GitHub Release trigger",
       main_push: "main push trigger",
@@ -1223,6 +1224,8 @@ export const enUS = {
   },
   memoCard: {
     yesterday: "Yesterday",
+    createdAt: "Created {{time}}",
+    updatedAt: "Updated {{time}}",
     emptyMemo: "Empty note",
     select: "Select {{title}}",
     unselect: "Deselect {{title}}",
@@ -1423,6 +1426,7 @@ export const enUS = {
     enableReadingProtection: "Enable reading protection",
     disableReadingProtection: "Disable reading protection and edit",
     updatedAt: "Updated {{time}}",
+    timestamps: "Created {{createdTime}} · Updated {{updatedTime}}",
     done: "Done",
     uploadAttachment: "Upload attachment",
     collapseFormat: "Collapse formatting",
