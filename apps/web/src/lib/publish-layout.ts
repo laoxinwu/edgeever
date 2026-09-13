@@ -767,24 +767,3 @@ export const applyPublishLayout = (
   applyThemeBlocks(root, layout, palette, surface);
 };
 
-export const buildPhonePreviewHtml = (html: string, title = "", editorTheme?: string | null) => {
-  const root = document.createElement("div");
-  const trimmedTitle = title.trim();
-  if (trimmedTitle && !/^\s*<h1[\s>]/i.test(html)) {
-    const heading = document.createElement("h1");
-    heading.textContent = trimmedTitle;
-    root.appendChild(heading);
-  }
-  root.insertAdjacentHTML("beforeend", html);
-
-  const paper = resolvePaperEditorTheme(editorTheme);
-  if (paper) {
-    applyPublishLayout(root, paper.layout, paper.palette, "phone");
-  }
-
-  return {
-    html: root.innerHTML,
-    style: root.getAttribute("style") ?? "",
-    paper: Boolean(paper),
-  };
-};

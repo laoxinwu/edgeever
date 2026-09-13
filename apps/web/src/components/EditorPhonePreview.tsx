@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useEditorTheme, useMermaidTheme } from "@/components/ThemeProvider";
 import { embedMermaidForPreview } from "@/lib/phone-preview-mermaid";
 import { Switch } from "@/components/ui/switch";
-import { buildPhonePreviewHtml } from "@/lib/publish-layout";
+import { preparePublishArticle } from "@/lib/wechat-copy";
 import {
   readEditorPhonePreviewFollowPreference,
   writeEditorPhonePreviewFollowPreference,
@@ -30,9 +30,9 @@ type EditorPhonePreviewProps = {
 const BLOCK_SELECTOR =
   "p, h1, h2, h3, li, blockquote, pre, img, table, hr, figure, [data-edgeever-theme-block]";
 
-export const collectPhonePreviewBlocks = (root: Element, skipTitle = "") => {
-  const blocks = [...root.querySelectorAll<HTMLElement>(BLOCK_SELECTOR)].filter((element) => {
-    if (element.matches("[data-ee-publish-chrome]") || element.closest("[data-ee-publish-chrome]")) {
+export const collectPhonePreviewBlocks = (root: Element) =>
+  [...root.querySelectorAll<HTMLElement>(BLOCK_SELECTOR)].filter((element) => {
+    if (element.matches("[data-ee-publish-chrome], .edgeever-phone-shell-title") || element.closest("[data-ee-publish-chrome]")) {
       return false;
     }
     const parentBlock = element.parentElement?.closest(BLOCK_SELECTOR);
@@ -41,13 +41,6 @@ export const collectPhonePreviewBlocks = (root: Element, skipTitle = "") => {
     }
     return true;
   });
-
-  const trimmedTitle = skipTitle.trim();
-  if (trimmedTitle && blocks[0]?.tagName === "H1" && blocks[0].textContent?.trim() === trimmedTitle) {
-    return blocks.slice(1);
-  }
-  return blocks;
-};
 
 const fingerprint = (element: HTMLElement) =>
   `${element.tagName}:${(element.innerText || element.getAttribute("src") || "").replace(/\s+/g, " ").trim().slice(0, 48)}`;
@@ -73,28 +66,26 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
   const { editorTheme } = useEditorTheme();
   const { mermaidTheme } = useMermaidTheme();
   const previewSyncGeneration = useRef(0);
-  const [markup, setMarkup] = useState({ html: "", style: "", paper: false });
+  const [markup, setMarkup] = useState({ html: "", style: "" });
   const [follow, setFollow] = useState(readEditorPhonePreviewFollowPreference);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const syncingRef = useRef(false);
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) {
-      setMarkup({ html: "", style: "", paper: false });
+      setMarkup({ html: "", style: "" });
       return;
     }
 
     const sync = () => {
       if (editor.isDestroyed) return;
       const generation = ++previewSyncGeneration.current;
-      const nextMarkup = buildPhonePreviewHtml(editor.getHTML(), title ?? "", editorTheme);
-      const holder = document.createElement("div");
-      holder.innerHTML = nextMarkup.html;
-      void embedMermaidForPreview(holder, editor, mermaidTheme).then(() => {
+      const root = preparePublishArticle(editor.getHTML(), editor.view.dom);
+      void embedMermaidForPreview(root, editor, mermaidTheme).then(() => {
         if (generation !== previewSyncGeneration.current) return;
         setMarkup({
-          ...nextMarkup,
-          html: holder.innerHTML,
+          html: root.innerHTML,
+          style: root.getAttribute("style") ?? "",
         });
       });
     };
@@ -106,7 +97,7 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
       editor.off("update", sync);
       editor.off("create", sync);
     };
-  }, [editor, editorTheme, mermaidTheme, title]);
+  }, [editor, editorTheme, mermaidTheme]);
 
   const handleFollowChange = (enabled: boolean) => {
     setFollow(enabled);
@@ -120,7 +111,7 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
     if (!preview || !scrollContainer) return;
 
     const editorBlocks = collectPhonePreviewBlocks(editorRoot);
-    const previewBlocks = collectPhonePreviewBlocks(preview, title);
+    const previewBlocks = collectPhonePreviewBlocks(preview);
     if (editorBlocks.length === 0 || previewBlocks.length === 0) return;
 
     const source = blockAtReadLine(editorBlocks, scrollContainer.getBoundingClientRect().top + 72);
@@ -133,7 +124,7 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
     window.requestAnimationFrame(() => {
       syncingRef.current = false;
     });
-  }, [editor, follow, scrollContainer, title]);
+  }, [editor, follow, scrollContainer]);
 
   const syncFromPreview = useCallback(() => {
     if (!follow || syncingRef.current || !editor || editor.isDestroyed) return;
@@ -142,7 +133,7 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
     if (!preview || !scrollContainer) return;
 
     const editorBlocks = collectPhonePreviewBlocks(editorRoot);
-    const previewBlocks = collectPhonePreviewBlocks(preview, title);
+    const previewBlocks = collectPhonePreviewBlocks(preview);
     if (editorBlocks.length === 0 || previewBlocks.length === 0) return;
 
     const source = blockAtReadLine(previewBlocks, preview.getBoundingClientRect().top + 52);
@@ -155,7 +146,7 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
     window.requestAnimationFrame(() => {
       syncingRef.current = false;
     });
-  }, [editor, follow, scrollContainer, title]);
+  }, [editor, follow, scrollContainer]);
 
   useEffect(() => {
     if (!follow) return;
@@ -208,17 +199,15 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
             <span className="edgeever-phone-device__lens" />
           </div>
           <div
-            className={cn("edgeever-phone-preview", markup.paper ? "edgeever-phone-preview--article" : "edgeever-phone-preview--editor")}
+            className="edgeever-phone-preview"
             ref={(node) => {
               previewRef.current = node;
               if (node) node.setAttribute("style", markup.style);
             }}
           >
+            {title?.trim() ? <p className="edgeever-phone-shell-title">{title.trim()}</p> : null}
             {markup.html ? (
-              <div
-                className={markup.paper ? "edgeever-phone-article" : "ProseMirror"}
-                dangerouslySetInnerHTML={{ __html: markup.html }}
-              />
+              <div className="edgeever-phone-article" dangerouslySetInnerHTML={{ __html: markup.html }} />
             ) : (
               <p className="pt-10 text-center text-sm text-slate-400">{t("editor.phonePreviewEmpty")}</p>
             )}

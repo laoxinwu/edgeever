@@ -753,6 +753,7 @@ textarea {
   overflow: hidden;
   border-radius: 40px;
   background: #fff;
+  container-type: size;
 }
 
 :root.dark .edgeever-phone-device__screen {
@@ -812,26 +813,28 @@ textarea {
 }
 
 .edgeever-phone-preview {
-  height: 100%;
+  box-sizing: border-box;
+  width: 390px;
+  height: calc(100cqh * 390px / 100cqw);
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 48px 16px 26px;
   background: var(--publish-bg, #fff);
+  zoom: calc(100cqw / 390px);
   -webkit-overflow-scrolling: touch;
 }
 
-.edgeever-phone-preview .ProseMirror,
 .edgeever-phone-article {
   min-height: 0;
   padding: 0 0 20px;
 }
 
-.edgeever-phone-preview h1 {
-  font-size: 24px !important;
-  font-weight: 800 !important;
-  line-height: 1.4 !important;
-  letter-spacing: normal !important;
-  margin: 0 0 12px !important;
+.edgeever-phone-shell-title {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: #111;
 }
 
 .edgeever-phone-preview .edgeever-phone-mermaid {

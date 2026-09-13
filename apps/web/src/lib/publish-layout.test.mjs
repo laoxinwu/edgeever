@@ -106,6 +106,13 @@ describe("copy pipeline wiring", () => {
     expect(source).toContain("applyPublishLayout");
     expect(source).toContain('"phone"');
     expect(source).toContain("MEMO_CONTENT_STYLE");
+    expect(source).toContain("preparePublishArticle");
+    expect(source).toContain("ProseMirror-separator");
+    expect(source).toContain("findOriginalImage");
+    expect(source).toContain("svgToWeChatImage");
+    expect(source).toContain('fillStyle = "#ffffff"');
+    expect(source).toContain("image/jpeg");
+    expect(source).toContain("text-align: center");
     expect(preferenceCard).not.toContain('t("settings.publishLayoutTitle")');
     expect(preferenceCard).toContain('t("settings.editorThemes.letter")');
   });
@@ -132,8 +139,8 @@ describe("copy pipeline wiring", () => {
   });
 
   test("phone preview markup applies the paper layout instead of raw editor chrome", () => {
-    const source = readFileSync(new URL("./publish-layout.ts", import.meta.url), "utf8");
-    expect(source).toContain("export const buildPhonePreviewHtml");
-    expect(source).toContain('applyPublishLayout(root, paper.layout, paper.palette, "phone")');
+    const source = readFileSync(new URL("./wechat-copy.ts", import.meta.url), "utf8");
+    expect(source).toContain("export const preparePublishArticle");
+    expect(source).toContain('applyPublishLayout(root, paperTheme.layout, paperTheme.palette, "phone")');
   });
 });
