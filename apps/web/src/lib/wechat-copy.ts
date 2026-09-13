@@ -231,6 +231,48 @@ const canvasToJpeg = (canvas: HTMLCanvasElement, quality = 0.86) =>
     );
   });
 
+const svgToTransparentPng = async (svg: string) => {
+  const objectUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const image = new Image();
+    image.src = objectUrl;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, image.naturalWidth);
+    canvas.height = Math.max(1, image.naturalHeight);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not create ornament canvas");
+    context.drawImage(image, 0, 0);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((png) => {
+        if (png) {
+          resolve(png);
+          return;
+        }
+        reject(new Error("Could not convert ornament to PNG"));
+      }, "image/png");
+    });
+    return blobToDataUrl(blob);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+};
+
+const rasterizePublishOrnamentsForWeChat = async (root: HTMLElement) => {
+  const images = Array.from(root.querySelectorAll<HTMLImageElement>("img[data-ee-publish-ornament]"));
+  await Promise.all(images.map(async (image) => {
+    const source = image.getAttribute("src")?.trim() ?? "";
+    if (!source.startsWith("data:image/svg+xml")) return;
+    try {
+      const encoded = source.replace(/^data:image\/svg\+xml(?:;charset=utf-8)?,/, "");
+      const svg = decodeURIComponent(encoded);
+      image.setAttribute("src", await svgToTransparentPng(svg));
+    } catch {
+      // Keep the SVG data URI in the live preview; WeChat copy can drop a broken ornament.
+    }
+  }));
+};
+
 const svgToWeChatImage = async (svg: string) => {
   const markup = prepareSvgMarkup(svg);
   const size = getSvgSize(markup);
@@ -445,6 +487,7 @@ export const buildWeChatClipboardHtml = async (editor: Editor) => {
   await embedMermaidForWeChat(container, editor);
   const originalImages = Array.from(editor.view.dom.querySelectorAll<HTMLImageElement>("img")).filter(isContentImage);
   await embedImagesForWeChat(container, originalImages);
+  await rasterizePublishOrnamentsForWeChat(container);
   return container.outerHTML;
 };
 
@@ -457,5 +500,6 @@ export const copyMarkdownToWeChat = async (markdown: string) => {
   );
   await embedMermaidForWeChat(container);
   await embedImagesForWeChat(container);
+  await rasterizePublishOrnamentsForWeChat(container);
   await copyHtmlToClipboard(container.outerHTML, container.textContent ?? "");
 };

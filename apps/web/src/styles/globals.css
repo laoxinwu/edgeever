@@ -834,7 +834,7 @@ textarea {
   font-size: 17px;
   font-weight: 650;
   line-height: 1.35;
-  color: #111;
+  color: var(--publish-text-strong, #111);
 }
 
 .edgeever-phone-preview .edgeever-phone-mermaid {
