@@ -207,7 +207,12 @@ describe("copy pipeline wiring", () => {
 
   test("phone preview markup applies the paper layout instead of raw editor chrome", () => {
     const source = readFileSync(new URL("./wechat-copy.ts", import.meta.url), "utf8");
+    const preview = readFileSync(new URL("../components/EditorPhonePreview.tsx", import.meta.url), "utf8");
     expect(source).toContain("export const preparePublishArticle");
     expect(source).toContain('applyPublishLayout(root, paperTheme.layout, paperTheme.palette, "phone")');
+    expect(source).toContain("editorThemeOverride");
+    expect(preview).toContain("preparePublishArticle(editor.getHTML(), editor.view.dom, editorTheme)");
+    expect(preview).toContain("previewRef.current?.setAttribute(\"style\", markup.style)");
+    expect(preview).toContain("key={editorTheme}");
   });
 });

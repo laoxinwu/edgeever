@@ -80,7 +80,11 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
     const sync = () => {
       if (editor.isDestroyed) return;
       const generation = ++previewSyncGeneration.current;
-      const root = preparePublishArticle(editor.getHTML(), editor.view.dom);
+      const root = preparePublishArticle(editor.getHTML(), editor.view.dom, editorTheme);
+      setMarkup({
+        html: root.innerHTML,
+        style: root.getAttribute("style") ?? "",
+      });
       void embedMermaidForPreview(root, editor, mermaidTheme).then(() => {
         if (generation !== previewSyncGeneration.current) return;
         setMarkup({
@@ -98,6 +102,10 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
       editor.off("create", sync);
     };
   }, [editor, editorTheme, mermaidTheme]);
+
+  useEffect(() => {
+    previewRef.current?.setAttribute("style", markup.style);
+  }, [markup.style]);
 
   const handleFollowChange = (enabled: boolean) => {
     setFollow(enabled);
@@ -198,16 +206,14 @@ export const EditorPhonePreview = ({ editor, title, scrollContainer, className }
           <div className="edgeever-phone-device__island" aria-hidden="true">
             <span className="edgeever-phone-device__lens" />
           </div>
-          <div
-            className="edgeever-phone-preview"
-            ref={(node) => {
-              previewRef.current = node;
-              if (node) node.setAttribute("style", markup.style);
-            }}
-          >
+          <div className="edgeever-phone-preview" ref={previewRef}>
             {title?.trim() ? <p className="edgeever-phone-shell-title">{title.trim()}</p> : null}
             {markup.html ? (
-              <div className="edgeever-phone-article" dangerouslySetInnerHTML={{ __html: markup.html }} />
+              <div
+                key={editorTheme}
+                className="edgeever-phone-article"
+                dangerouslySetInnerHTML={{ __html: markup.html }}
+              />
             ) : (
               <p className="pt-10 text-center text-sm text-slate-400">{t("editor.phonePreviewEmpty")}</p>
             )}

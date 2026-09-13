@@ -473,11 +473,20 @@ export const readEditorCopyContext = (from?: HTMLElement | null) => {
   };
 };
 
-export const preparePublishArticle = (html: string, from?: HTMLElement | null) => {
+export const preparePublishArticle = (
+  html: string,
+  from?: HTMLElement | null,
+  editorThemeOverride?: string,
+) => {
   const root = document.createElement("div");
   root.innerHTML = html;
-  const { editorTheme, customColors, customCss } = readEditorCopyContext(from);
-  applyInlineStyles(root, editorTheme, customColors, customCss);
+  const context = readEditorCopyContext(from);
+  applyInlineStyles(
+    root,
+    editorThemeOverride ?? context.editorTheme,
+    context.customColors,
+    context.customCss,
+  );
   convertImageGalleriesForWeChat(root);
   return root;
 };
