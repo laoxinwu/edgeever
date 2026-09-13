@@ -602,7 +602,7 @@ export const zhCN = {
       start: "靠左显示",
     },
     editorThemes: {
-      default: "系统默认",
+      default: "原生主题",
       letter: "暖笺",
       guide: "教程",
       blueprint: "蓝图",

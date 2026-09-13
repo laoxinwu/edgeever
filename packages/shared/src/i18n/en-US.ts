@@ -602,7 +602,7 @@ export const enUS = {
       start: "Align left",
     },
     editorThemes: {
-      default: "System default",
+      default: "Native theme",
       letter: "Letter",
       guide: "Guide",
       blueprint: "Blueprint",
